@@ -69,6 +69,7 @@ object ESMeta extends Git(BASE_DIR) {
     CmdBuildCFG,
     // Analysis of ECMA-262
     CmdTyCheck,
+    CmdAstFlow,
     // Interpreter & Double Debugger for ECMAScript
     CmdParse,
     CmdEval,
@@ -95,6 +96,7 @@ object ESMeta extends Git(BASE_DIR) {
     BuildCFG,
     // Analysis of ECMA-262
     TyCheck,
+    AstFlow,
     // Interpreter & Double Debugger for ECMAScript
     Parse,
     Eval,
