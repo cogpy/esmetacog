@@ -16,7 +16,12 @@ case class Algorithm(
   /** HTML elements */
   var elem: Element = Element("emu-alg")
 
-  /** check whether it is incomplete */
+  /** check whether it is a built-in algorithm */
+  def isBuiltin: Boolean = head match
+    case _: BuiltinHead => true
+    case _              => false
+
+  /** check whether it is complete */
   lazy val complete: Boolean = incompleteSteps.isEmpty
 
   /** algorithm name */
