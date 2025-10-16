@@ -206,7 +206,7 @@ case class Test262(
           else {
             val (ast, codeStr) = loadTest(filename)
             val script = Script(Code.Test262(codeStr), filename)
-            cov.runAndCheck(script, Some(ast))._1
+            cov.runAndCheck(script, Some(ast), (0, 0))._1
           }
         if (tyCheck) collector.add(filename, st.typeErrors)
         val returnValue = st(GLOBAL_RESULT)

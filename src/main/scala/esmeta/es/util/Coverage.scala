@@ -17,6 +17,7 @@ import esmeta.util.*
 import esmeta.util.SystemUtils.*
 import io.circe.*, io.circe.syntax.*
 import scala.collection.immutable.BitSet
+import scala.collection.mutable.{Map => MMap}
 import java.util.Base64
 
 /** coverage measurement of cfg */
@@ -48,6 +49,9 @@ case class Coverage(
   private var nodeViews: Set[NodeView] = Set()
   private var condViewMap: Map[Cond, Map[View, Set[Script]]] = Map()
   private var condViews: Set[CondView] = Set()
+
+  // instrumentation
+  val effectedMap: MMap[Int, Int] = MMap()
 
   // meta-info for -test262test:all-tests
   private val pathMap: Map[String, Int] = if (all) {
@@ -86,6 +90,7 @@ case class Coverage(
   def runAndCheck(
     script: Script,
     ast: Option[Ast] = None,
+    pair: (Int, Int),
   ): (State, Boolean, Boolean) =
     val sourceText = script.code.toString
     val interp = run(
@@ -94,7 +99,7 @@ case class Coverage(
       Some(script.code),
       Some(script.name),
     )
-    this.synchronized(check(script, interp))
+    this.synchronized(check(script, interp, pair))
 
   /** evaluate a given ECMAScript program */
   def run(code: Code): Interp =
@@ -127,7 +132,11 @@ case class Coverage(
     )
     interp.result; interp
 
-  def check(script: Script, interp: Interp): (State, Boolean, Boolean) = {
+  def check(
+    script: Script,
+    interp: Interp,
+    pair: (Int, Int),
+  ): (State, Boolean, Boolean) = {
     val Script(code, _) = script
     val finalSt = interp.result
 
@@ -142,7 +151,10 @@ case class Coverage(
     for ((nodeView, targets) <- interp.touchedNodeViews)
       touchedNodeViews += nodeView -> targets
       getScripts(nodeView) match
-        case None => update(nodeView, script); updated = true; covered = true
+        case None =>
+          if (pair._1 != 0 && pair._2 >= 5000)
+            effectedMap(nodeView.node.id) = pair._1
+          update(nodeView, script); updated = true; covered = true
         case Some(scripts) =>
           if (all) { update(nodeView, script); updated = true }
           else {
@@ -240,6 +252,14 @@ case class Coverage(
       noSpace = false,
     )
     log("Dumped branch coverage")
+
+    dumpJson(
+      name = "effected branch per nodes",
+      data = effectedMap.toMap,
+      filename = s"$baseDir/effected-branch.json",
+      noSpace = false,
+    )
+    log("Dumped effected branch per nodes")
 
     if (withScripts)
       dumpDir[Script](
