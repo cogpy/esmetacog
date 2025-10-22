@@ -4,6 +4,7 @@ import esmeta.error.*
 import esmeta.phase.*
 import esmeta.util.*
 import esmeta.util.BaseUtils.*
+import esmeta.opencog.*
 
 /** ESMeta top-level object */
 object ESMeta extends Git(BASE_DIR) {
@@ -81,6 +82,10 @@ object ESMeta extends Git(BASE_DIR) {
     CmdMutate,
     CmdDumpDebugger,
     CmdDumpVisualizer,
+    // OpenCog Cognitive Architecture
+    CmdOpenCogAnalyze,
+    CmdMeTTaExecute,
+    CmdToolGenerate,
   )
   val cmdMap = commands.foldLeft[Map[String, Command[_]]](Map()) {
     case (map, cmd) => map + (cmd.name -> cmd)
@@ -107,6 +112,10 @@ object ESMeta extends Git(BASE_DIR) {
     Mutate,
     DumpDebugger,
     DumpVisualizer,
+    // OpenCog Cognitive Architecture
+    OpenCogAnalyze,
+    MeTTaExecute,
+    ToolGenerate,
   )
 
   /** command options */
