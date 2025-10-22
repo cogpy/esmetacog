@@ -2,6 +2,7 @@ package esmeta
 
 import esmeta.phase.*
 import esmeta.util.ArgParser
+import esmeta.opencog.*
 
 /** commands
   *
@@ -209,5 +210,37 @@ case object CmdDumpVisualizer
     "dumps the resources required by the visualizer. (for internal use)"
   val examples = List(
     "esmeta dump-visualizer                      # dump resources for visualizer",
+  )
+}
+
+// -----------------------------------------------------------------------------
+// OpenCog Cognitive Architecture
+// -----------------------------------------------------------------------------
+/** `opencog-analyze` command */
+case object CmdOpenCogAnalyze extends Command("opencog-analyze", CmdBuildCFG >> OpenCogAnalyze) {
+  def help = "performs OpenCog cognitive analysis on ECMA-262 specification."
+  val examples = List(
+    "esmeta opencog-analyze                        # cognitive analysis of spec",
+    "esmeta opencog-analyze -opencog-analyze:log   # analysis with logging",
+    "esmeta opencog-analyze -opencog-analyze:output=results.json  # save results",
+  )
+}
+
+/** `metta-execute` command */
+case object CmdMeTTaExecute extends Command("metta-execute", CmdOpenCogAnalyze >> MeTTaExecute) {
+  def help = "executes MeTTa script in OpenCog context for cognitive reasoning."
+  val examples = List(
+    "esmeta metta-execute -metta-execute:script='(ConceptNode \"test\")'",
+    "esmeta metta-execute -metta-execute:script=script.metta -metta-execute:log",
+  )
+}
+
+/** `tool-generate` command */
+case object CmdToolGenerate extends Command("tool-generate", CmdOpenCogAnalyze >> ToolGenerate) {
+  def help = "generates ECMA-262 based tools from cognitive patterns."
+  val examples = List(
+    "esmeta tool-generate                              # generate tools from patterns",
+    "esmeta tool-generate -tool-generate:output=tools/ # output to tools directory",
+    "esmeta tool-generate -tool-generate:format=ts     # generate TypeScript tools",
   )
 }
