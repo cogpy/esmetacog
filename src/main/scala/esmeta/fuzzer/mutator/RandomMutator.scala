@@ -24,36 +24,15 @@ class RandomMutator(using cfg: CFG)(
 
   val names = List("RandomMutator")
 
-  /** mutate code */
-  def apply(
-    code: Code,
-    n: Int,
-    target: Option[(CondView, Coverage)],
-    elapsedBlock: Int,
-  ): Seq[Result] = code match
-    case Code.Normal(str) => apply(str, n, target)
-    case builtin: Code.Builtin =>
-      val mutTargets = Target(builtin)(using assignExprParser)
-      if (mutTargets.isEmpty) Nil
-      else
-        import Target.*
-        val mutTarget = choose(mutTargets.toVector)
-        for {
-          ast <- this.apply(mutTarget.ast, n, target)
-          str = ast.toString(grammar = Some(cfg.grammar)).trim
-          newCode = mutTarget.updateCode(builtin, str)
-        } yield Result(name, newCode)
-    case _: Code.Test262 => throw Exception("impossible match")
-
-  /** mutate ASTs */
+  /** mutate a program */
   def apply(
     ast: Ast,
     n: Int,
     target: Option[(CondView, Coverage)],
-  ): Seq[Ast] =
+  ): Seq[Result] =
     val k = targetAstCounter(ast)
     if (k > 0) c = (n - 1) / k + 1
-    shuffle(Walker.walk(ast)).take(n)
+    shuffle(Walker.walk(ast)).take(n).map(Result(name, _))
 
   /* number of new candidates to make for each target */
   var c = 0

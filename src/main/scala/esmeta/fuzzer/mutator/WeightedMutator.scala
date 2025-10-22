@@ -17,20 +17,11 @@ class WeightedMutator(using cfg: CFG)(
 
   val weight: Int = 0
 
-  /** mutate code */
-  def apply(
-    code: Code,
-    n: Int,
-    target: Option[(CondView, Coverage)],
-    elapsedBlock: Int,
-  ): Seq[Result] = chooseMutator(code, n, target, elapsedBlock)
-
-  /** mutate ASTs */
   def apply(
     ast: Ast,
     n: Int,
     target: Option[(CondView, Coverage)],
-  ): Seq[Ast] = chooseMutator(ast, n, target)
+  ): Seq[Result] = chooseMutator(ast, n, target)
 
   /** choose a mutator under weight */
   def chooseMutator: Mutator =

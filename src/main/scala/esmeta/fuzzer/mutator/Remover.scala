@@ -25,23 +25,12 @@ class Remover(using cfg: CFG)(
   /** default weight for Remover is 1 */
   val weight: Int = 1
 
-  /** mutate code */
-  def apply(
-    code: Code,
-    n: Int,
-    target: Option[(CondView, Coverage)],
-    elapsedBlock: Int,
-  ): Seq[Result] = code match
-    case Code.Normal(str) => apply(str, n, target)
-    case _: Code.Builtin  => Nil // TODO
-    case _: Code.Test262  => throw Exception("impossible match")
-
-  /** mutate ASTs */
+  /** mutate a program */
   def apply(
     ast: Ast,
     n: Int,
     target: Option[(CondView, Coverage)],
-  ): Seq[Ast] = {
+  ): Seq[Result] = {
     // count of removal candidates
     val k = victimCounter(ast)
     if (k == 0) randomMutator(ast, n, target)
@@ -50,7 +39,8 @@ class Remover(using cfg: CFG)(
       // if n is bigger than 2^k (the total size of the search space),
       // fill the remaining count with the randomly generated program.
       if (Math.pow(2, k) < n)
-        walk(ast) ++ randomMutator(ast, n - (1 << k), target)
+        walk(ast).map(Result(name, _)) ++
+        randomMutator(ast, n - (1 << k), target)
       else {
         // calculate the most efficient parameters
         // until 2^(k2 - 1) < n, increase k1 and decrease k2 (initially k)
@@ -67,7 +57,8 @@ class Remover(using cfg: CFG)(
   /** parameter for sampler */
   private var (k1, k2) = (0, 0)
 
-  private def sample(ast: Ast, n: Int): Seq[Ast] = shuffle(walk(ast)).take(n)
+  private def sample(ast: Ast, n: Int): Seq[Result] =
+    shuffle(walk(ast)).take(n).map(Result(name, _))
 
   private def doDrop: Boolean =
     if k1 > 0 && randBool(k1 / (k1 + k2).toFloat) then

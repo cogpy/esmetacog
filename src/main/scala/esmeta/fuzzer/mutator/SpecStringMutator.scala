@@ -25,33 +25,12 @@ class SpecStringMutator(using cfg: CFG)(
   /** default weight for SpecStringMutator is 1 */
   val weight: Int = 1
 
-  /** mutate code */
-  def apply(
-    code: Code,
-    n: Int,
-    target: Option[(CondView, Coverage)],
-    elapsedBlock: Int,
-  ): Seq[Result] = code match
-    case Code.Normal(str) => apply(str, n, target)
-    case builtin: Code.Builtin =>
-      val mutTargets = Target(builtin)(using assignExprParser)
-      if (mutTargets.isEmpty) Nil
-      else
-        import Target.*
-        val mutTarget = choose(mutTargets.toVector)
-        for {
-          ast <- this.apply(mutTarget.ast, n, target)
-          str = ast.toString(grammar = Some(cfg.grammar)).trim
-          newCode = mutTarget.updateCode(builtin, str)
-        } yield Result(name, newCode)
-    case _: Code.Test262 => throw Exception("impossible match")
-
-  /** mutate ASTs */
+  /** mutate a program */
   def apply(
     ast: Ast,
     n: Int,
     target: Option[(CondView, Coverage)],
-  ): Seq[Ast] = {
+  ): Seq[Result] = {
     // count the number of primary expressions
     val k = primaryCounter(ast)
     if (k == 0) randomMutator(ast, n, target)
@@ -72,8 +51,8 @@ class SpecStringMutator(using cfg: CFG)(
   private var targetCondStr: Option[String] = None
 
   /** sample n distinct asts using spec-strings */
-  private def sample(ast: Ast, n: Int): Seq[Ast] =
-    Set.tabulate[Ast](n)(_ => walk(ast)).toSeq
+  private def sample(ast: Ast, n: Int): Seq[Result] =
+    Set.tabulate[Ast](n)(_ => walk(ast)).map(Result(name, _)).toSeq
 
   /** ast walker */
   override def walk(syn: Syntactic): Syntactic =
